@@ -1,0 +1,32 @@
+---
+- name: Static App Deployment
+  hosts: all
+  become: yes
+  tasks:
+
+  - name: Update Apt Repository
+    apt:
+      update_cache: yes
+      
+  - name: Install Nginx
+    apt:
+      name: nginx
+      state: latest
+      
+  - name: Git Clone
+    git:
+      repo: https://github.com/Paulanisiobi/static-calculator.git
+      dest: /var/www/html/ansible-calculator
+      single_branch: yes
+      version: master 
+  - name: Copy Nginx configuration to slave
+    copy:
+      src: /home/ubuntu/ansible/default
+      dest: /etc/nginx/sites-enabled/default
+      owner: www-data
+      group: www-data
+      mode: '0644'
+  - name: Retart nginx service 
+    service:
+      name: nginx
+      state: restarted

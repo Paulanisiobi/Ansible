@@ -1,0 +1,69 @@
+---
+- name: Deploy Flask App
+  hosts: all
+  become: yes
+  tasks:
+
+  - name: Install Packages
+    apt:
+      name:
+       - git
+       - nginx
+       - python3
+       - python3-pip
+      state: present
+      update_cache: yes
+
+  - name: Install virtualenv
+    pip:
+     name: virtualenv
+
+  - name: Git Clone
+    git:
+      repo: https://github.com/Paulanisiobi/FlaskChess.git
+      dest: /home/ubuntu/FlaskChess
+      single_branch: yes
+      version: master
+
+  - name: Change Directory
+    shell: 
+      cmd: python3 -m virtualenv chess-deploy
+      chdir: /home/ubuntu/FlaskChess
+
+  - name: Install python requirements in (virtualenv)
+    pip:
+      requirements: /home/ubuntu/FlaskChess/requirements.txt
+      virtualenv: /home/ubuntu/FlaskChess/chess-deploy
+
+  - name: Change gunicorn service to another folder
+    shell: 
+      cmd: cp gunicorn-chess.service /etc/systemd/system/
+      chdir: /home/ubuntu/FlaskChess
+
+  - name: Retart gunicorn service 
+    service:
+      name: gunicorn-chess.service
+      state: started
+      enabled: yes
+
+  - name: Remove default nginx configuration
+    cmd: rm /etc/nginx/sites-enabled/default
+
+
+  - name: Copy nginx configuration file
+    shell:
+      cmd: cp default /etc/nginx/sites-enabled
+    args:
+      chdir: /home/ubuntu/FlaskChess
+    
+
+  - name: Retart nginx service 
+    service:
+      name: nginx
+      state: restarted
+
+
+
+
+    
+
